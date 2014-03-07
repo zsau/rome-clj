@@ -3,6 +3,7 @@
            (java.net URL)
            (java.io InputStreamReader)
            (com.sun.syndication.feed.synd SyndFeed))
+  (:require [net.cgrand.enlive-html :as html])
   (:gen-class))
 
 (defstruct feed :authors :categories :contributors :copyright :description
@@ -25,6 +26,12 @@
 (defn make-content "Create content struct from SyndContent"
   [c]
   (struct-map content :type (.getType c) :value (.getValue c)))
+
+(defn text-content "Get text content from SyndContent"
+  [c]
+  (let [{:keys [type value]} (make-content c)]
+    (if (not= "html" type) value
+      (apply str (html/select (html/html-snippet value) [html/text-node])))))
 
 (defn make-link "Create link struct from SyndLink"
   [l]
@@ -60,7 +67,7 @@
               :enclosures (map make-enclosure (seq (.getEnclosures e)))
               :link (.getLink e)
               :published-date (.getPublishedDate e)
-              :title (.getTitle e)
+              :title (text-content (.getTitleEx e))
               :updated-date (.getUpdatedDate e)
               :uri (.getUri e)))
 
@@ -79,7 +86,7 @@
               :link (.getLink f)
               :entry-links (map make-link (seq (.getLinks f)))
               :published-date (.getPublishedDate f)
-              :title (.getTitle f)
+              :title (text-content (.getTitleEx f))
               :uri (.getUri f)))
 
 (defn- parse-internal [xmlreader]
