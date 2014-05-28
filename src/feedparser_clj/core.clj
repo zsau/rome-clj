@@ -61,7 +61,8 @@
   [e]
   (struct-map entry :authors (map make-person (seq (.getAuthors e)))
               :categories (map make-category (seq (.getCategories e)))
-              :content (make-content (first (.getContents e)))
+              :content (when-let [c (first (.getContents e))]
+                         (make-content c))
               :contributors (map make-person (seq (.getContributors e)))
               :description (if-let [d (.getDescription e)] (make-content d))
               :enclosures (map make-enclosure (seq (.getEnclosures e)))
