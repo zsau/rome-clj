@@ -9,7 +9,7 @@
 (defstruct feed :authors :categories :contributors :copyright :description
            :encoding :entries :feed-type :image :language :link :entry-links
            :published-date :title :uri)
-(defstruct entry :authors :categories :contents :contributors :description
+(defstruct entry :authors :categories :content :contributors :description
            :enclosures :link :published-date :title :updated-date :url)
 (defstruct enclosure :length :type :uri)
 (defstruct person :email :name :uri)
@@ -61,7 +61,7 @@
   [e]
   (struct-map entry :authors (map make-person (seq (.getAuthors e)))
               :categories (map make-category (seq (.getCategories e)))
-              :contents (map make-content (seq (.getContents e)))
+              :content (make-content (first (.getContents e)))
               :contributors (map make-person (seq (.getContributors e)))
               :description (if-let [d (.getDescription e)] (make-content d))
               :enclosures (map make-enclosure (seq (.getEnclosures e)))
