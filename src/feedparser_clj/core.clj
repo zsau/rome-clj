@@ -70,7 +70,7 @@
                :updated-date (.getUpdatedDate e)
                :uri (.getUri e)}))
 
-(defn make-feed "Create a feed record from a SyndFeed"
+(defn make-feed "Create feed record from SyndFeed"
   [f]
   (map->feed {:authors (map make-person (seq (.getAuthors f)))
               :categories (map make-category (seq (.getCategories f)))
