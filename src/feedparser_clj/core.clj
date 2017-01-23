@@ -1,6 +1,6 @@
 (ns feedparser-clj.core
   (:import (java.net URL)
-           (com.sun.syndication.io SyndFeedInput XmlReader))
+           (com.rometools.rome.io SyndFeedInput XmlReader))
   (:require [net.cgrand.enlive-html :as html])
   (:gen-class))
 
