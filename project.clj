@@ -1,4 +1,4 @@
-(defproject zsau/feedparser-clj "0.4.2"
+(defproject zsau/feedparser-clj "0.5.0"
   :description "Parse RSS/Atom feeds with a simple, clojure-friendly API."
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [enlive "1.1.6"]
