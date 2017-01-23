@@ -1,8 +1,6 @@
 (ns feedparser-clj.core
-  (:import (com.sun.syndication.io SyndFeedInput XmlReader)
-           (java.net URL)
-           (java.io InputStreamReader)
-           (com.sun.syndication.feed.synd SyndFeed))
+  (:import (java.net URL)
+           (com.sun.syndication.io SyndFeedInput XmlReader))
   (:require [net.cgrand.enlive-html :as html])
   (:gen-class))
 
