@@ -81,12 +81,14 @@
               :title (text-content (.getTitleEx f))
               :uri (.getUri f)}))
 
-(defn parse-feed [uri]
+(defn uri-stream [uri]
   (let [client (-> (HttpClients/custom)
                    (.useSystemProperties)
                    (.disableCookieManagement)
                    (.build))
-        response (.execute client (HttpGet. uri))
-        stream (.getContent (.getEntity response))
-        feed (.build (SyndFeedInput.) (XmlReader. stream))]
-    (make-feed feed)))
+        response (.execute client (HttpGet. uri))]
+    (.getContent (.getEntity response))))
+
+(defn parse-feed [stream]
+  (make-feed
+    (.build (SyndFeedInput.) (XmlReader. stream))))
