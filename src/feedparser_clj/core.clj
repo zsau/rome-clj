@@ -1,6 +1,8 @@
 (ns feedparser-clj.core
   (:import (java.net URL)
-           (com.rometools.rome.io SyndFeedInput XmlReader))
+           (com.rometools.rome.io SyndFeedInput XmlReader)
+           (org.apache.http.impl.client HttpClients)
+           (org.apache.http.client.methods HttpGet))
   (:require [net.cgrand.enlive-html :as html])
   (:gen-class))
 
@@ -88,15 +90,11 @@
               :title (text-content (.getTitleEx f))
               :uri (.getUri f)}))
 
-(defn- parse-internal [xmlreader]
-  (let [feedinput (new SyndFeedInput)
-        syndfeed (.build feedinput xmlreader)]
-    (make-feed syndfeed)))
-
-(defn parse-feed "Get and parse a feed from a URL"
-  ([feedsource]
-     (parse-internal (new XmlReader (if (string? feedsource)
-                                      (URL. feedsource)
-                                      feedsource))))
-  ([feedsource content-type]
-     (parse-internal (new XmlReader feedsource content-type))))
+(defn parse-feed [uri]
+  (let [client (-> (HttpClients/custom)
+                   (.useSystemProperties)
+                   (.build))
+        response (.execute client (HttpGet. uri))
+        stream (.getContent (.getEntity response))
+        feed (.build (SyndFeedInput.) (XmlReader. stream))]
+    (make-feed feed)))
