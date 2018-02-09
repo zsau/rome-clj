@@ -18,47 +18,39 @@
 (defrecord image [description link title url])
 (defrecord link [href hreflang length rel title type])
 
-(defn make-enclosure "Create enclosure record from SyndEnclosure"
-  [e]
+(defn make-enclosure [e]
   (map->enclosure {:length (.getLength e) :type (.getType e)
                    :url (.getUrl e)}))
 
-(defn make-content "Create content record from SyndContent"
-  [c]
+(defn make-content [c]
   (map->content {:type (.getType c) :value (.getValue c)}))
 
-(defn text-content "Get text content from SyndContent"
-  [c]
+(defn text-content [c]
   (let [{:keys [type value]} (make-content c)]
     (if (not= "html" type) value
       (apply str (html/select (html/html-snippet value) [html/text-node])))))
 
-(defn make-link "Create link record from SyndLink"
-  [l]
+(defn make-link [l]
   (map->link {:href (.getHref l) :hreflang (.getHreflang l)
               :length (.getLength l) :rel (.getRel l) :title (.getTitle l)
               :type (.getType l)}))
 
-(defn make-category "Create category record from SyndCategory"
-  [c]
+(defn make-category [c]
   (map->category {:name (.getName c)
                   :taxonomyURI (.getTaxonomyUri c)}))
 
-(defn make-person "Create person record from SyndPerson"
-  [sp]
+(defn make-person [sp]
   (map->person {:email (.getEmail sp)
                 :name (.getName sp)
                 :uri (.getUri sp)}))
 
-(defn make-image "Create image record from SyndImage"
-  [i]
+(defn make-image [i]
   (map->image {:description (.getDescription i)
                :link (.getLink i)
                :title (.getTitle i)
                :url (.getUrl i)}))
 
-(defn make-entry "Create feed entry record from SyndEntry"
-  [e]
+(defn make-entry [e]
   (map->entry {:authors (map make-person (seq (.getAuthors e)))
                :categories (map make-category (seq (.getCategories e)))
                :content (when-let [c (first (.getContents e))]
@@ -72,8 +64,7 @@
                :updated-date (.getUpdatedDate e)
                :uri (.getUri e)}))
 
-(defn make-feed "Create feed record from SyndFeed"
-  [f]
+(defn make-feed [f]
   (map->feed {:authors (map make-person (seq (.getAuthors f)))
               :categories (map make-category (seq (.getCategories f)))
               :contributors (map make-person (seq (.getContributors f)))
