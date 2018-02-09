@@ -84,6 +84,7 @@
 (defn parse-feed [uri]
   (let [client (-> (HttpClients/custom)
                    (.useSystemProperties)
+                   (.disableCookieManagement)
                    (.build))
         response (.execute client (HttpGet. uri))
         stream (.getContent (.getEntity response))
