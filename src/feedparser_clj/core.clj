@@ -3,7 +3,8 @@
            (com.rometools.rome.io SyndFeedInput XmlReader)
            (org.apache.http.impl.client HttpClients)
            (org.apache.http.client.methods HttpGet))
-  (:require [net.cgrand.enlive-html :as html])
+  (:require [clojure.string :as str]
+            [net.cgrand.enlive-html :as html])
   (:gen-class))
 
 (defrecord feed [authors categories contributors copyright description
@@ -17,6 +18,9 @@
 (defrecord content [type value])
 (defrecord image [description link title url])
 (defrecord link [href hreflang length rel title type])
+
+(defn empty->nil [c]
+  (if (empty? c) nil c))
 
 (defn make-enclosure [e]
   (map->enclosure {:length (.getLength e) :type (.getType e)
@@ -50,8 +54,26 @@
                :title (.getTitle i)
                :url (.getUrl i)}))
 
+(defn remove-parens [name]
+  (some-> name
+    (str/replace #"^\(" "")
+    (str/replace #"\)$" "")))
+
+(defn parse-rss-author [author]
+  (if (str/includes? author "@")
+    (let [[email name] (str/split author #" +" 2)]
+      {:email email, :name (remove-parens name)})
+    {:name author}))
+
+(defn entry-authors [e]
+  (if-let [authors (seq (.getAuthors e))]
+    (map make-person authors)
+    (if-let [author (empty->nil (.getAuthor e))]
+      [(parse-rss-author author)]
+      [])))
+
 (defn make-entry [e]
-  (map->entry {:authors (map make-person (seq (.getAuthors e)))
+  (map->entry {:authors (entry-authors e)
                :categories (map make-category (seq (.getCategories e)))
                :content (when-let [c (first (.getContents e))]
                           (make-content c))
