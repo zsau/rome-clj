@@ -1,6 +1,8 @@
 (ns feedparser-clj.core
-  (:import (java.net URL)
+  (:import (com.rometools.rome.feed.synd SyndCategory SyndContent SyndEnclosure SyndEntry SyndFeed SyndImage SyndLink SyndPerson)
            (com.rometools.rome.io SyndFeedInput XmlReader)
+           (java.net URI)
+           (java.io InputStream)
            (org.apache.http.impl.client HttpClients)
            (org.apache.http.client.methods HttpGet))
   (:require [clojure.string :as str]
@@ -22,33 +24,38 @@
 (defn empty->nil [c]
   (if (empty? c) nil c))
 
-(defn make-enclosure [e]
-  (map->enclosure {:length (.getLength e) :type (.getType e)
+(defn make-enclosure [^SyndEnclosure e]
+  (map->enclosure {:length (.getLength e)
+                   :type (.getType e)
                    :url (.getUrl e)}))
 
-(defn make-content [c]
-  (map->content {:type (.getType c) :value (.getValue c)}))
+(defn make-content [^SyndContent c]
+  (map->content {:type (.getType c)
+                 :value (.getValue c)}))
 
 (defn text-content [c]
   (let [{:keys [type value]} (make-content c)]
     (if (not= "html" type) value
       (apply str (html/select (html/html-snippet value) [html/text-node])))))
 
-(defn make-link [l]
-  (map->link {:href (.getHref l) :hreflang (.getHreflang l)
-              :length (.getLength l) :rel (.getRel l) :title (.getTitle l)
+(defn make-link [^SyndLink l]
+  (map->link {:href (.getHref l)
+              :hreflang (.getHreflang l)
+              :length (.getLength l)
+              :rel (.getRel l)
+              :title (.getTitle l)
               :type (.getType l)}))
 
-(defn make-category [c]
+(defn make-category [^SyndCategory c]
   (map->category {:name (.getName c)
                   :taxonomyURI (.getTaxonomyUri c)}))
 
-(defn make-person [sp]
-  (map->person {:email (.getEmail sp)
-                :name (.getName sp)
-                :uri (.getUri sp)}))
+(defn make-person [^SyndPerson p]
+  (map->person {:email (.getEmail p)
+                :name (.getName p)
+                :uri (.getUri p)}))
 
-(defn make-image [i]
+(defn make-image [^SyndImage i]
   (map->image {:description (.getDescription i)
                :link (.getLink i)
                :title (.getTitle i)
@@ -65,14 +72,14 @@
       {:email email, :name (remove-parens name)})
     {:name author}))
 
-(defn entry-authors [e]
+(defn entry-authors [^SyndEntry e]
   (if-let [authors (seq (.getAuthors e))]
     (map make-person authors)
     (if-let [author (empty->nil (.getAuthor e))]
       [(parse-rss-author author)]
       [])))
 
-(defn make-entry [e]
+(defn make-entry [^SyndEntry e]
   (map->entry {:authors (entry-authors e)
                :categories (map make-category (seq (.getCategories e)))
                :content (when-let [c (first (.getContents e))]
@@ -86,7 +93,7 @@
                :updated-date (.getUpdatedDate e)
                :uri (.getUri e)}))
 
-(defn make-feed [f]
+(defn make-feed [^SyndFeed f]
   (map->feed {:authors (map make-person (seq (.getAuthors f)))
               :categories (map make-category (seq (.getCategories f)))
               :contributors (map make-person (seq (.getContributors f)))
@@ -103,7 +110,7 @@
               :title (text-content (.getTitleEx f))
               :uri (.getUri f)}))
 
-(defn uri-stream [uri]
+(defn uri-stream [^URI uri]
   (let [client (-> (HttpClients/custom)
                    (.useSystemProperties)
                    (.disableCookieManagement)
@@ -111,6 +118,6 @@
         response (.execute client (HttpGet. uri))]
     (.getContent (.getEntity response))))
 
-(defn parse-feed [stream]
+(defn parse-feed [^InputStream istream]
   (make-feed
-    (.build (SyndFeedInput.) (XmlReader. stream))))
+    (.build (SyndFeedInput.) (XmlReader. istream))))
