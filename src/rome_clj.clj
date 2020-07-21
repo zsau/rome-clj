@@ -2,10 +2,7 @@
   (:import (com.rometools.rome.feed.synd SyndCategory SyndContent SyndEnclosure SyndEntry SyndFeed SyndImage SyndLink SyndPerson)
            (com.rometools.rome.io SyndFeedInput XmlReader)
            (java.net URI)
-           (java.io InputStream)
-           (org.apache.http.client HttpClient)
-           (org.apache.http.client.methods HttpGet)
-           (org.apache.http.impl.client HttpClients))
+           (java.io InputStream))
   (:require [clojure.string :as str]
             [net.cgrand.enlive-html :as html])
   (:gen-class))
@@ -108,18 +105,6 @@
       (map->person {:email (.getEmail p)
                     :name (.getName p)
                     :uri (.getUri p)})))
-
-(defn http-client ^HttpClient []
-  (-> (HttpClients/custom)
-      .useSystemProperties
-      .disableCookieManagement
-      .build))
-
-(defn uri-stream [^URI uri]
-  (-> (http-client)
-      (.execute (HttpGet. uri))
-      .getEntity
-      .getContent))
 
 (defn parse [^InputStream istream]
   (-> (SyndFeedInput.)
