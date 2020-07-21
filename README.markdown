@@ -1,107 +1,78 @@
-feedparser-clj
-==============
+# rome-clj
 
-Parse RSS/Atom feeds with a simple, clojure-friendly API.
-Uses the Java ROME library, wrapped in StructMaps.
+rome-clj is a Clojure wrapper for ROME, a Java [RSS](https://en.wikipedia.org/wiki/RSS)/[Atom](https://en.wikipedia.org/wiki/Atom_(Web_standard)) feed parsing library. Aside from some light normalization such as merging `getAuthor` with `getAuthors`, we translate ROME's `Synd*` interfaces 1-1; see [ROME's javadocs](https://javadoc.io/static/com.rometools/rome/1.15.0/com/rometools/rome/feed/synd/package-summary.html) for more info.
 
-Status
-------
+## Installation
 
-Usable for parsing and exploring feeds.  No escaping of potentially-malicious content is performed, and we've inherited any quirks that ROME itself has.
+Leiningen dependency:
 
-Supports the following syndication formats:
+```clojure
+[zsau/rome-clj "1.0.0"]
+```
 
-* RSS 0.90
-* RSS 0.91 Netscape
-* RSS 0.91 Userland
-* RSS 0.92
-* RSS 0.93
-* RSS 0.94
-* RSS 1.0
-* RSS 2.0
-* Atom 0.3
-* Atom 1.0
+## Usage
 
-Usage
------
+The public API contains only the function `parse`, which takes a `java.io.InputStream` and returns a map.
 
-For a more detailed understanding about supported feed types and meanings, the ROME javadocs (under [`com.sun.syndication.feed.synd`](https://rome.dev.java.net/apidocs/0_8/com/sun/syndication/feed/synd/package-summary.html)) are a good resource.
+```clojure
+=> (require '[rome-clj :as rome] '[clojure.java.io :as io] '[clojure.pprint :as pp])
+=> (with-open [istream (io/input-stream "atom.xml")] (pp/pprint (rome/parse istream)))
 
-There is only one function, `parse-feed`, which takes a URL and returns a StructMap with all the feed's structure and content.
-
-The following REPL session should give an idea about the capabilities and usage of `feedparser-clj`.
-
-Load the package into your namespace:
-
-    user=> (ns user (:use feedparser-clj.core) (:require [clojure.contrib.string :as string]))
-
-Retrieve and parse a feed: 
-
-    user=> (def f (parse-feed "http://gregheartsfield.com/atom.xml"))
-
-`f` is now a map that can be accessed by key to retrieve feed information:
-
-    user=> (keys f)
-    (:authors :categories :contributors :copyright :description :encoding :entries :feed-type :image :language :link :entry-links :published-date :title :uri)
-
-A key applied to the feed gives the value, or nil if it was not defined for the feed.
-
-    user=> (:title f)
-    "Greg Heartsfield"
-
-Feed/entry ID or GUID can be obtained with the `:uri` key:
-
-    user=> (:uri f)
-    "http://gregheartsfield.com/"
-
-Some feed attributes are maps themselves (like `:image`) or lists of structs (like `:entries` and `:authors`):
-
-    user=> (map :email (:authors f))
-    ("scsibug@imap.cc")
-
-Check how many entries are in the feed:
-
-    user=> (count (:entries f))
-    18
-
-Determine the feed type:
-
-    user=> (:feed-type f)
-    "atom_1.0"
-
-Look at the first few entry titles:
-
-    user=> (map :title (take 3 (:entries f)))
-    ("Version Control Diagrams with TikZ" "Introducing cabal2doap" "hS3, with ByteString")
-
-Find the most recently updated entry's title:
-
-    user=> (first (map :title (reverse (sort-by :updated-date (:entries f)))))
-    "Version Control Diagrams with TikZ"
-
-Compute what percentage of entries have the word "haskell" in the body (uses `clojure.contrib.string`):
-
-    user=> (let [es (:entries f)] 
-               (* 100.0 (/ (count (filter #(string/substring? "haskell" 
-                   (:value (first (:contents %)))) es))
-               (count es))))
-    55.55555555555556
-
-Installation
-------------
-
-This library uses the [Leiningen](http://github.com/technomancy/leiningen#readme) build tool.
-
-ROME and JDOM are required dependencies, which may have to be manually retrieved and installed with Maven.  After that, simply clone this repository, and run:
-
-    lein install
+{:authors [],
+ :categories [],
+ :contributors [],
+ :copyright "Copyright (c) 2003, Mark Pilgrim",
+ :description
+ "\n    A <em>lot</em> of effort\n    went into making this effortless\n  ",
+ :encoding nil,
+ :entries
+ [{:authors
+   [{:email "f8dy@example.com",
+     :name "Mark Pilgrim",
+     :uri "http://example.org/"}],
+   :categories [],
+   :content
+   {:type "xhtml",
+    :value
+    "\r\n      <div xmlns=\"http://www.w3.org/1999/xhtml\">\r\n        <p><i>[Update: The Atom draft is finished.]</i></p>\r\n      </div>\r\n    "},
+   :contributors
+   [{:email nil, :name "Sam Ruby", :uri nil}
+    {:email nil, :name "Joe Gregorio", :uri nil}],
+   :description nil,
+   :enclosures
+   [{:length 1337,
+     :type "audio/mpeg",
+     :uri nil,
+     :url "http://example.org/audio/ph34r_my_podcast.mp3"}],
+   :link "http://example.org/2005/04/02/atom",
+   :published-date #inst "2003-12-13T12:29:29.000-00:00",
+   :title "Atom draft-07 snapshot",
+   :updated-date #inst "2005-07-31T12:29:29.000-00:00",
+   :url nil,
+   :uri "tag:example.org,2003:3.2397"}],
+ :feed-type "atom_1.0",
+ :image nil,
+ :language nil,
+ :link "http://example.org/",
+ :entry-links
+ [{:href "http://example.org/",
+   :hreflang "en",
+   :length 0,
+   :rel "alternate",
+   :title nil,
+   :type "text/html"}
+  {:href "http://example.org/feed.atom",
+   :hreflang nil,
+   :length 0,
+   :rel "self",
+   :title nil,
+   :type "application/atom+xml"}],
+ :published-date #inst "2005-07-31T12:29:29.000-00:00",
+ :title "dive into mark",
+ :uri "tag:example.org,2003:3"}
+```
 
 License
 -------
 
-Distributed under the BSD-3 License.
-
-Copyright
----------
-
-Copyright (C) 2010 Greg Heartsfield
+Copyright (C) 2010 Greg Heartsfield. Distributed under the BSD-3 License.
