@@ -16,7 +16,7 @@ The public API contains only the function `parse`, which takes a `java.io.InputS
 
 ```clojure
 => (require '[rome-clj :as rome] '[clojure.java.io :as io] '[clojure.pprint :as pp])
-=> (with-open [istream (io/input-stream "atom.xml")] (pp/pprint (rome/parse istream)))
+=> (with-open [istream (io/input-stream "test/resources/atom-1_0.xml")] (pp/pprint (rome/parse istream)))
 
 {:authors [],
  :categories [],
