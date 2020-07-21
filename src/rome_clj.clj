@@ -94,7 +94,11 @@
        :name (.getName p)
        :uri (.getUri p)}))
 
-(defn parse [^InputStream istream]
+;;; Public API
+
+(defn parse
+  "Parses an RSS or Atom feed from `istream`, returning a map."
+  [^InputStream istream]
   (-> (SyndFeedInput.)
       (.build (XmlReader. istream))
       ->clj))
