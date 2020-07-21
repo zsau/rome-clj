@@ -3,8 +3,9 @@
            (com.rometools.rome.io SyndFeedInput XmlReader)
            (java.net URI)
            (java.io InputStream)
-           (org.apache.http.impl.client HttpClients)
-           (org.apache.http.client.methods HttpGet))
+           (org.apache.http.client HttpClient)
+           (org.apache.http.client.methods HttpGet)
+           (org.apache.http.impl.client HttpClients))
   (:require [clojure.string :as str]
             [net.cgrand.enlive-html :as html])
   (:gen-class))
@@ -21,103 +22,106 @@
 (defrecord image [description link title url])
 (defrecord link [href hreflang length rel title type])
 
-(defn empty->nil [c]
-  (if (empty? c) nil c))
+(defprotocol ToClj
+  (->clj [this]))
 
-(defn make-enclosure [^SyndEnclosure e]
-  (map->enclosure {:length (.getLength e)
-                   :type (.getType e)
-                   :url (.getUrl e)}))
+(defn remove-parens [s]
+  (str/replace s #"^\((.*)\)$" "$1"))
 
-(defn make-content [^SyndContent c]
-  (map->content {:type (.getType c)
-                 :value (.getValue c)}))
-
-(defn text-content [c]
-  (let [{:keys [type value]} (make-content c)]
-    (if (not= "html" type) value
-      (apply str (html/select (html/html-snippet value) [html/text-node])))))
-
-(defn make-link [^SyndLink l]
-  (map->link {:href (.getHref l)
-              :hreflang (.getHreflang l)
-              :length (.getLength l)
-              :rel (.getRel l)
-              :title (.getTitle l)
-              :type (.getType l)}))
-
-(defn make-category [^SyndCategory c]
-  (map->category {:name (.getName c)
-                  :taxonomy-uri (.getTaxonomyUri c)}))
-
-(defn make-person [^SyndPerson p]
-  (map->person {:email (.getEmail p)
-                :name (.getName p)
-                :uri (.getUri p)}))
-
-(defn make-image [^SyndImage i]
-  (map->image {:description (.getDescription i)
-               :link (.getLink i)
-               :title (.getTitle i)
-               :url (.getUrl i)}))
-
-(defn remove-parens [name]
-  (some-> name
-    (str/replace #"^\(" "")
-    (str/replace #"\)$" "")))
-
-(defn parse-rss-author [author]
+(defn parse-author [author]
   (if (str/includes? author "@")
     (let [[email name] (str/split author #" +" 2)]
-      {:email email, :name (remove-parens name)})
+      {:email email
+       :name (some-> name remove-parens)})
     {:name author}))
 
 (defn entry-authors [^SyndEntry e]
-  (if-let [authors (seq (.getAuthors e))]
-    (map make-person authors)
-    (if-let [author (empty->nil (.getAuthor e))]
-      [(parse-rss-author author)]
-      [])))
+  (or (some->> e .getAuthors not-empty (mapv ->clj))
+      (some-> e .getAuthor not-empty parse-author vector)
+      []))
 
-(defn make-entry [^SyndEntry e]
-  (map->entry {:authors (entry-authors e)
-               :categories (map make-category (seq (.getCategories e)))
-               :content (when-let [c (first (.getContents e))]
-                          (make-content c))
-               :contributors (map make-person (seq (.getContributors e)))
-               :description (if-let [d (.getDescription e)] (make-content d))
-               :enclosures (map make-enclosure (seq (.getEnclosures e)))
-               :link (.getLink e)
-               :published-date (.getPublishedDate e)
-               :title (text-content (.getTitleEx e))
-               :updated-date (.getUpdatedDate e)
-               :uri (.getUri e)}))
+(defn text-content [c]
+  (let [{:keys [type value]} (->clj c)]
+    (if (not= "html" type) value
+      (apply str (html/select (html/html-snippet value) [html/text-node])))))
 
-(defn make-feed [^SyndFeed f]
-  (map->feed {:authors (map make-person (seq (.getAuthors f)))
-              :categories (map make-category (seq (.getCategories f)))
-              :contributors (map make-person (seq (.getContributors f)))
-              :copyright (.getCopyright f)
-              :description (.getDescription f)
-              :encoding (.getEncoding f)
-              :entries (map make-entry (seq (.getEntries f)))
-              :entry-links (map make-link (seq (.getLinks f)))
-              :feed-type (.getFeedType f)
-              :image (if-let [i (.getImage f)] (make-image i))
-              :language (.getLanguage f)
-              :link (.getLink f)
-              :published-date (.getPublishedDate f)
-              :title (text-content (.getTitleEx f))
-              :uri (.getUri f)}))
+(extend-protocol ToClj
+  SyndCategory
+    (->clj [c]
+      (map->category {:name (.getName c)
+                      :taxonomy-uri (.getTaxonomyUri c)}))
+  SyndContent
+    (->clj [c]
+      (map->content {:type (.getType c)
+                     :value (.getValue c)}))
+  SyndEnclosure
+    (->clj [e]
+      (map->enclosure {:length (.getLength e)
+                       :type (.getType e)
+                       :url (.getUrl e)}))
+  SyndEntry
+    (->clj [e]
+      (map->entry {:authors (entry-authors e)
+                   :categories (mapv ->clj (.getCategories e))
+                   :content (some-> e .getContents first ->clj)
+                   :contributors (mapv ->clj (.getContributors e))
+                   :description (some-> e .getDescription ->clj)
+                   :enclosures (mapv ->clj (.getEnclosures e))
+                   :link (.getLink e)
+                   :published-date (.getPublishedDate e)
+                   :title (text-content (.getTitleEx e))
+                   :updated-date (.getUpdatedDate e)
+                   :uri (.getUri e)}))
+  SyndFeed
+    (->clj [f]
+      (map->feed {:authors (mapv ->clj (.getAuthors f))
+                  :categories (mapv ->clj (.getCategories f))
+                  :contributors (mapv ->clj (.getContributors f))
+                  :copyright (.getCopyright f)
+                  :description (.getDescription f)
+                  :encoding (.getEncoding f)
+                  :entries (mapv ->clj (.getEntries f))
+                  :entry-links (mapv ->clj (.getLinks f))
+                  :feed-type (.getFeedType f)
+                  :image (some-> f .getImage ->clj)
+                  :language (.getLanguage f)
+                  :link (.getLink f)
+                  :published-date (.getPublishedDate f)
+                  :title (text-content (.getTitleEx f))
+                  :uri (.getUri f)}))
+  SyndImage
+    (->clj [i]
+      (map->image {:description (.getDescription i)
+                   :link (.getLink i)
+                   :title (.getTitle i)
+                   :url (.getUrl i)}))
+  SyndLink
+    (->clj [l]
+      (map->link {:href (.getHref l)
+                  :hreflang (.getHreflang l)
+                  :length (.getLength l)
+                  :rel (.getRel l)
+                  :title (.getTitle l)
+                  :type (.getType l)}))
+  SyndPerson
+    (->clj [p]
+      (map->person {:email (.getEmail p)
+                    :name (.getName p)
+                    :uri (.getUri p)})))
+
+(defn http-client ^HttpClient []
+  (-> (HttpClients/custom)
+      .useSystemProperties
+      .disableCookieManagement
+      .build))
 
 (defn uri-stream [^URI uri]
-  (let [client (-> (HttpClients/custom)
-                   (.useSystemProperties)
-                   (.disableCookieManagement)
-                   (.build))
-        response (.execute client (HttpGet. uri))]
-    (.getContent (.getEntity response))))
+  (-> (http-client)
+      (.execute (HttpGet. uri))
+      .getEntity
+      .getContent))
 
 (defn parse-feed [^InputStream istream]
-  (make-feed
-    (.build (SyndFeedInput.) (XmlReader. istream))))
+  (-> (SyndFeedInput.)
+      (.build (XmlReader. istream))
+      ->clj))
