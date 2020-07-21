@@ -75,4 +75,4 @@ The public API contains only the function `parse`, which takes a `java.io.InputS
 License
 -------
 
-Copyright (C) 2010 Greg Heartsfield. Distributed under the BSD-3 License.
+Copyright 2010 Greg Heartsfield, 2014 zsau. Distributed under the [3-Clause BSD License](LICENSE).
