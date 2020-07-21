@@ -1,5 +1,5 @@
-(defproject zsau/feedparser-clj "0.6.4"
-  :description "Parse RSS/Atom feeds with a simple, clojure-friendly API."
+(defproject zsau/rome-clj "1.0.0"
+  :description "Clojure wrapper for ROME, a Java RSS/Atom feed parsing library"
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [enlive "1.1.6"]
                  [org.apache.httpcomponents/httpclient "4.5.12"]

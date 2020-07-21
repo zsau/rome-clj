@@ -1,4 +1,4 @@
-(ns feedparser-clj.core
+(ns rome-clj
   (:import (com.rometools.rome.feed.synd SyndCategory SyndContent SyndEnclosure SyndEntry SyndFeed SyndImage SyndLink SyndPerson)
            (com.rometools.rome.io SyndFeedInput XmlReader)
            (java.net URI)
