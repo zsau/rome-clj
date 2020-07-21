@@ -121,7 +121,7 @@
       .getEntity
       .getContent))
 
-(defn parse-feed [^InputStream istream]
+(defn parse [^InputStream istream]
   (-> (SyndFeedInput.)
       (.build (XmlReader. istream))
       ->clj))
