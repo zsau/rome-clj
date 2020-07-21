@@ -16,7 +16,7 @@
                   enclosures link published-date title updated-date url])
 (defrecord enclosure [length type uri])
 (defrecord person [email name uri])
-(defrecord category [name taxonomyURI])
+(defrecord category [name taxonomy-uri])
 (defrecord content [type value])
 (defrecord image [description link title url])
 (defrecord link [href hreflang length rel title type])
@@ -48,7 +48,7 @@
 
 (defn make-category [^SyndCategory c]
   (map->category {:name (.getName c)
-                  :taxonomyURI (.getTaxonomyUri c)}))
+                  :taxonomy-uri (.getTaxonomyUri c)}))
 
 (defn make-person [^SyndPerson p]
   (map->person {:email (.getEmail p)
