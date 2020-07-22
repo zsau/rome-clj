@@ -1,4 +1,4 @@
-(defproject zsau/rome-clj "1.0.0"
+(defproject zsau/rome-clj "1.0.1"
   :description "Clojure wrapper for ROME, a Java RSS/Atom feed parsing library"
   :profiles {:dev {:resource-paths ["test/resources"]}}
   :dependencies [[com.rometools/rome "1.15.0"]

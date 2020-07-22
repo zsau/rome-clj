@@ -7,7 +7,7 @@ rome-clj is a Clojure wrapper for ROME, a Java [RSS](https://en.wikipedia.org/wi
 Leiningen dependency:
 
 ```clojure
-[zsau/rome-clj "1.0.0"]
+[zsau/rome-clj "1.0.1"]
 ```
 
 ## Usage
