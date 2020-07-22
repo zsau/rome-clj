@@ -6,18 +6,32 @@
   (:require [clojure.string :as str]
             [net.cgrand.enlive-html :as html]))
 
+;; Source: https://stackoverflow.com/a/201378
+(def email-pattern
+  #"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])")
+
+(def name-and-email-pattern
+  (re-pattern (format "(.*) <(%s)>" email-pattern)))
+
+(def email-and-name-pattern
+  (re-pattern (format "(%s) \\((.*)\\)" email-pattern)))
+
 (defprotocol ToClj
   (->clj [this]))
 
-(defn remove-parens [s]
-  (str/replace s #"^\((.*)\)$" "$1"))
-
 (defn parse-author [author]
-  (if (str/includes? author "@")
-    (let [[email name] (str/split author #" +" 2)]
-      {:email email
-       :name (some-> name remove-parens)})
-    {:name author}))
+  (if-let [[_ name email] (re-matches name-and-email-pattern author)]
+    {:email email, :name name}
+    (if-let [[_ email & more] (re-matches email-and-name-pattern author)]
+      {:email email, :name (last more)}
+      (if (re-matches email-pattern author)
+        {:email author, :name author}
+        {:name author}))))
+
+(defn feed-authors [^SyndFeed f]
+  (or (some->> f .getAuthors not-empty (mapv ->clj))
+      (some-> f .getAuthor not-empty parse-author vector)
+      []))
 
 (defn entry-authors [^SyndEntry e]
   (or (some->> e .getAuthors not-empty (mapv ->clj))
@@ -58,7 +72,7 @@
        :uri (.getUri e)})
   SyndFeed
     (->clj [f]
-      {:authors (mapv ->clj (.getAuthors f))
+      {:authors (feed-authors f)
        :categories (mapv ->clj (.getCategories f))
        :contributors (mapv ->clj (.getContributors f))
        :copyright (.getCopyright f)

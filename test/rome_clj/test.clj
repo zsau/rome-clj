@@ -427,7 +427,8 @@
           :contributors [],
           :image nil,
           :uri nil,
-          :authors []})))
+          :authors [{:email "dave@userland.com"
+                     :name "Dave Winer"}]})))
 
 ;; Source: https://www.rssboard.org/files/sample-rss-2.xml
 (deftest rss-2_0
@@ -502,4 +503,5 @@
           :contributors [],
           :image nil,
           :uri nil,
-          :authors []})))
+          :authors [{:email "editor@example.com"
+                     :name "editor@example.com"}]})))
