@@ -4,8 +4,7 @@
            (java.net URI)
            (java.io InputStream))
   (:require [clojure.string :as str]
-            [net.cgrand.enlive-html :as html])
-  (:gen-class))
+            [net.cgrand.enlive-html :as html]))
 
 (defprotocol ToClj
   (->clj [this]))
