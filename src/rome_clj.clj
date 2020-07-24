@@ -17,7 +17,15 @@
   (re-pattern (format "(%s) \\((.*)\\)" email-pattern)))
 
 (defprotocol ToClj
-  (->clj [this]))
+  (->clj* [this]))
+
+(defn empty->nil [x]
+  (when-not (and (coll? x) (empty? x))
+    x))
+
+(defn ->clj [synd-obj]
+  (into {} (filter (comp empty->nil val))
+        (->clj* synd-obj)))
 
 (defn parse-author [author]
   (if-let [[_ name email] (re-matches name-and-email-pattern author)]
@@ -45,20 +53,20 @@
 
 (extend-protocol ToClj
   SyndCategory
-    (->clj [c]
+    (->clj* [c]
       {:name (.getName c)
        :taxonomy-uri (.getTaxonomyUri c)})
   SyndContent
-    (->clj [c]
+    (->clj* [c]
       {:type (.getType c)
        :value (.getValue c)})
   SyndEnclosure
-    (->clj [e]
+    (->clj* [e]
       {:length (.getLength e)
        :type (.getType e)
        :url (.getUrl e)})
   SyndEntry
-    (->clj [e]
+    (->clj* [e]
       {:authors (entry-authors e)
        :categories (mapv ->clj (.getCategories e))
        :content (some-> e .getContents first ->clj)
@@ -71,7 +79,7 @@
        :updated-date (.getUpdatedDate e)
        :uri (.getUri e)})
   SyndFeed
-    (->clj [f]
+    (->clj* [f]
       {:authors (feed-authors f)
        :categories (mapv ->clj (.getCategories f))
        :contributors (mapv ->clj (.getContributors f))
@@ -88,13 +96,13 @@
        :title (text-content (.getTitleEx f))
        :uri (.getUri f)})
   SyndImage
-    (->clj [i]
+    (->clj* [i]
       {:description (.getDescription i)
        :link (.getLink i)
        :title (.getTitle i)
        :url (.getUrl i)})
   SyndLink
-    (->clj [l]
+    (->clj* [l]
       {:href (.getHref l)
        :hreflang (.getHreflang l)
        :length (.getLength l)
@@ -102,7 +110,7 @@
        :title (.getTitle l)
        :type (.getType l)})
   SyndPerson
-    (->clj [p]
+    (->clj* [p]
       {:email (.getEmail p)
        :name (.getName p)
        :uri (.getUri p)}))
