@@ -33,7 +33,7 @@
     (if-let [[_ email & more] (re-matches email-and-name-pattern author)]
       {:email email, :name (last more)}
       (if (re-matches email-pattern author)
-        {:email author, :name author}
+        {:email author}
         {:name author}))))
 
 (defn feed-authors [^SyndFeed f]
