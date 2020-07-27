@@ -1,6 +1,6 @@
 # rome-clj
 
-rome-clj is a Clojure wrapper for ROME, a Java [RSS](https://en.wikipedia.org/wiki/RSS)/[Atom](https://en.wikipedia.org/wiki/Atom_(Web_standard)) feed parsing library. Aside from some light normalization such as merging `getAuthor` with `getAuthors`, we translate ROME's `Synd*` interfaces 1-1; see [ROME's javadocs](https://javadoc.io/static/com.rometools/rome/1.15.0/com/rometools/rome/feed/synd/package-summary.html) for more info.
+rome-clj is a Clojure wrapper for [ROME](https://github.com/rometools/rome), a Java [RSS](https://en.wikipedia.org/wiki/RSS)/[Atom](https://en.wikipedia.org/wiki/Atom_(Web_standard)) feed parsing library. Aside from some light normalization such as merging `getAuthor` with `getAuthors`, we translate ROME's `Synd*` interfaces 1-1; see [ROME's javadocs](https://javadoc.io/static/com.rometools/rome/1.15.0/com/rometools/rome/feed/synd/package-summary.html) for more info.
 
 Originally forked from [feedparser-clj](https://github.com/scsibug/feedparser-clj).
 
