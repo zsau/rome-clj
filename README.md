@@ -63,7 +63,7 @@ The public API contains only the function `parse`, which takes a `java.io.InputS
  :title "Liftoff News",
  :language "en-us",
  :link "http://liftoff.msfc.nasa.gov/",
- :authors [{:email "editor@example.com", :name "editor@example.com"}]}
+ :authors [{:email "editor@example.com"}]}
 ```
 
 License
