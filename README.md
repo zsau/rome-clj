@@ -9,7 +9,7 @@ Originally forked from [feedparser-clj](https://github.com/scsibug/feedparser-cl
 Leiningen dependency:
 
 ```clojure
-[zsau/rome-clj "1.0.2"]
+[zsau/rome-clj "1.0.3"]
 ```
 
 ## Usage
